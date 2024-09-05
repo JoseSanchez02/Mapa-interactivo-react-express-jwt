@@ -3,9 +3,21 @@ import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import { PORT, SECRET_JWT_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
+import cors from 'cors'
+
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
+
+const corsOptions = {
+  origin: '*', // url permitida
+  credentials: true, // Permite el envío de cookies y encabezados de autorización
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'] // Encabezados permitidos
+}
+// middleware de CORS
+app.use(cors(corsOptions))
+
 app.get('/', (req, res) => {
   res.send('<h1>Hello Pplon</h1>')
 })
@@ -22,8 +34,8 @@ app.post('/login', (req, res) => {
       .cookie('access_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 3600000
+        sameSite: 'strict', // proteccion csrf
+        maxAge: 3600000 // 1h
       })
       .send({ user, token })
   } catch (error) {
