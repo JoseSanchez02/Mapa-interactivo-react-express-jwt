@@ -10,7 +10,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 const corsOptions = {
-  origin: '*', // url permitida
+  origin: 'http://localhost:5173', // url permitida
   credentials: true, // Permite el envío de cookies y encabezados de autorización
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
   allowedHeaders: ['Content-Type', 'Authorization'] // Encabezados permitidos

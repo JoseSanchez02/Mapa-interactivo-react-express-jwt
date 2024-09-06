@@ -1,46 +1,42 @@
-import DBLocal from 'db-local'
-
+import mysql from 'mysql2/promise'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
-
 import { SALT_ROUNDS } from './config.js'
 
-const { Schema } = new DBLocal({ path: './db' })
-
-const User = Schema('User', {
-  _id: { type: String, required: true },
-  username: { type: String, required: true },
-  password: { type: String, required: true }
+const connection = await mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '123494',
+  database: 'mapa_interactivo'
 })
 
 export class UserRepository {
-  static create ({ username, password }) {
+  static async create ({ username, password }) {
     Validation.username(username)
     Validation.password(password)
 
-    const user = User.findOne({ username })
-    if (user) throw new Error('User already exists')
+    const [rows] = await connection.execute('SELECT * FROM User WHERE username = ?', [username])
+    if (rows.length > 0) throw new Error('User already exists')
 
     const id = crypto.randomUUID()
-    const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS) //
-    User.create({
-      _id: id,
-      username,
-      password: hashedPassword
-    }).save()
+    const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS)
+
+    await connection.execute('INSERT INTO User (_id, username, password) VALUES (?, ?, ?)', [id, username, hashedPassword])
     return id
   }
 
-  static login ({ username, password }) {
+  static async login ({ username, password }) {
     Validation.username(username)
     Validation.password(password)
 
-    const user = User.findOne({ username })
-    if (!user) throw new Error('username does not exist')
+    const [rows] = await connection.execute('SELECT * FROM User WHERE username = ?', [username])
+    if (rows.length === 0) throw new Error('username does not exist')
 
+    const user = rows[0]
     const isValid = bcrypt.compareSync(password, user.password)
     if (!isValid) throw new Error('password is invalid')
-    const { password: _, ...publicUser } = user // remove password from user object
+
+    const { password: _, ...publicUser } = user
 
     return {
       username: publicUser.username,
