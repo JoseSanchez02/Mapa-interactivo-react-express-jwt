@@ -11,7 +11,7 @@ const connection = await mysql.createConnection({
 })
 
 export class UserRepository {
-  static async create ({ username, password }) {
+  static async create ({ username, password, rol }) {
     Validation.username(username)
     Validation.password(password)
 
@@ -21,7 +21,10 @@ export class UserRepository {
     const id = crypto.randomUUID()
     const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS)
 
-    await connection.execute('INSERT INTO User (_id, username, password) VALUES (?, ?, ?)', [id, username, hashedPassword])
+    await connection.execute(
+      'INSERT INTO User (_id, username, password, rol) VALUES (?, ?, ?, ?)',
+      [id, username, hashedPassword, rol]
+    )
     return id
   }
 
@@ -40,7 +43,8 @@ export class UserRepository {
 
     return {
       username: publicUser.username,
-      id: publicUser._id
+      id: publicUser._id,
+      rol: publicUser.rol // Incluimos el rol en la respuesta
     }
   }
 }

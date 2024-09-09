@@ -22,14 +22,16 @@ app.get('/', (req, res) => {
   res.send('<h1>Hello Pplon</h1>')
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body
   try {
-    const user = UserRepository.login({ username, password })
+    const user = await UserRepository.login({ username, password }) // Aquí obtenemos el rol del usuario
     const token = jwt.sign(
-      { id: user._id, username: user.username }, SECRET_JWT_KEY, {
+      { id: user.id, username: user.username, rol: user.rol },
+      SECRET_JWT_KEY, {
         expiresIn: '1h'
-      })
+      }
+    )
     res
       .cookie('access_token', token, {
         httpOnly: true,
@@ -42,19 +44,33 @@ app.post('/login', (req, res) => {
     res.status(401).send(error.message)
   }
 })
-app.post('/register', (req, res) => {
-  const { username, password } = req.body
+
+app.post('/register', async (req, res) => {
+  const { username, password, rol } = req.body
   console.log(req.body)
   try {
-    const id = UserRepository.create({ username, password })
+    const id = await UserRepository.create({ username, password, rol })
     res.send({ id })
   } catch (error) {
     res.status(400).send(error.message)
   }
 })
-app.post('/logout', (req, res) => {})
 
-app.post('/protected', (req, res) => {})
+app.post('/logout', (req, res) => {
+  res.clearCookie('access_token').send({ message: 'Logged out successfully' })
+})
+
+app.post('/dashboard', (req, res) => {
+  const token = req.cookies.access_token
+  if (!token) return res.status(401).send('Access denied')
+
+  try {
+    const verified = jwt.verify(token, SECRET_JWT_KEY)
+    res.send(verified) // Aquí podrías enviar data protegida
+  } catch (error) {
+    res.status(403).send('Invalid token')
+  }
+})
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
