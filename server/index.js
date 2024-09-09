@@ -35,7 +35,7 @@ app.post('/login', async (req, res) => {
     res
       .cookie('access_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         sameSite: 'strict', // proteccion csrf
         maxAge: 3600000 // 1h
       })
@@ -60,15 +60,17 @@ app.post('/logout', (req, res) => {
   res.clearCookie('access_token').send({ message: 'Logged out successfully' })
 })
 
-app.post('/dashboard', (req, res) => {
+app.get('/dashboard', (req, res) => {
   const token = req.cookies.access_token
-  if (!token) return res.status(401).send('Access denied')
+  if (!token) return res.status(403).send('Access denied')
 
   try {
     const verified = jwt.verify(token, SECRET_JWT_KEY)
-    res.send(verified) // Aquí podrías enviar data protegida
+    console.log('Token verified:', verified) // Para depurar
+    res.send({ user: verified })
   } catch (error) {
-    res.status(403).send('Invalid token')
+    console.error('Token verification failed:', error) // Para depurar
+    res.status(401).send('Invalid token')
   }
 })
 
