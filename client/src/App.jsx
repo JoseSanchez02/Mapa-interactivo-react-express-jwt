@@ -67,15 +67,7 @@ function App() {
             />
           </div>
           <div className="mt-3 flex justify-between items-center">
-            <div>
-              <input type="checkbox" />
-              <label>Remember Me</label>
-            </div>
-            <div>
-              <a href="#" className="text-blue-800 font-semibold">
-                Forgot Password?
-              </a>
-            </div>
+
           </div>
           <div className="mt-5">
             <button
