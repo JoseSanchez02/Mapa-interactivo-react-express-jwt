@@ -1,24 +1,45 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Login() {
-  const [values, setValues] = React.useState({
+  const [values, setValues] = useState({
     username: '',
     password: '',
   });
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
+  // Verifica si hay un token válido cuando se carga el componente
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        // Hacemos una solicitud al backend para verificar el token
+        const response = await axios.get('http://localhost:3000/dashboard', { withCredentials: true });
+        // Si el token es válido, redirige al dashboard
+        if (response.status === 200) {
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        // Si hay algún error, el token no es válido o no existe
+        console.log('No valid token, staying on login.');
+      }
+    };
+
+    checkToken();
+  }, [navigate]);
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-    try {
-      const response = await axios.post('http://localhost:3000/login', values, { withCredentials: true });
-      console.log(response.data);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error(error);
-    }
+    axios.post('http://localhost:3000/login', values, { withCredentials: true })
+      .then((response) => {
+        console.log(response.data);
+        // Redirigir al dashboard tras un login exitoso
+        navigate('/dashboard');
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   const handleChange = (e) => {
@@ -27,7 +48,6 @@ function Login() {
       [e.target.name]: e.target.value,
     });
   };
-  
 
   return (
     <div className="flex justify-center items-center h-screen bg-blue-900">

@@ -61,16 +61,22 @@ app.post('/logout', (req, res) => {
 })
 
 app.get('/dashboard', (req, res) => {
-  const token = req.cookies.access_token
-  if (!token) return res.status(403).send('Access denied')
+  const token = req.cookies.access_token // Extrae el token de las cookies
+
+  // Si no hay token en las cookies, devuelve un 403 (Forbidden)
+  if (!token) return res.status(403).json({ message: 'Access denied. No token provided.' })
 
   try {
+    // Verifica el token
     const verified = jwt.verify(token, SECRET_JWT_KEY)
-    console.log('Token verified:', verified) // Para depurar
-    res.send({ user: verified })
+    console.log('Token verified:', verified) // Para depuración
+
+    // Si el token es válido, envía la información del usuario
+    res.status(200).json({ user: verified })
   } catch (error) {
-    console.error('Token verification failed:', error) // Para depurar
-    res.status(401).send('Invalid token')
+    // Si la verificación falla, devuelve un 401 (Unauthorized)
+    console.error('Token verification failed:', error.message) // Para depuración
+    res.status(401).json({ message: 'Invalid token' })
   }
 })
 
