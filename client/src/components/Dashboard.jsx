@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleMap, LoadScript, Marker, DrawingManager } from '@react-google-maps/api';
-//import Sidebar from './SideBar';
+import Sidebar from './SideBar';
 
 const libraries = ['drawing'];
 
@@ -33,7 +33,7 @@ function Dashboard() {
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return <div>Cargando...</div>;
   }
 
   const containerStyle = {
@@ -82,13 +82,19 @@ function Dashboard() {
   const getIconUrl = (iconType) => {
     switch (iconType) {
       case 'police':
-        return '/Police.png'; // Imagen de policía
+        return '/Police.png'; 
       case 'car':
-        return '/PoliceCar.png'; // Imagen de coche de policía
+        return '/PoliceCar.png'; 
       case 'marker':
-        return '/marcador.webp'; // Imagen del marcador
+        return '/marcador.webp'; 
+      case 'carroBlindado':
+        return '/carroBlindado.png'; 
+      case 'helicoptero':
+        return '/helicoptero.png'; 
+      case 'perro':
+        return '/perro.png'; 
       default:
-        return '/Police.png'; // Imagen de policía por defecto
+        return '/Police.png'; 
     }
   };
 
@@ -101,7 +107,8 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
-
+      {/* Sidebar Component */}
+      <Sidebar /> 
 
       <div className="flex flex-col items-center justify-center w-full">
         {/* Map Section */}
@@ -127,24 +134,10 @@ function Dashboard() {
                       url: getIconUrl(marker.iconType),
                       scaledSize: new window.google.maps.Size(32, 32),
                     }}
-                    onClick={() => handleMarkerClick(index)} // Detectar click en el marcador para borrarlo
+                    onDblClick={() => handleMarkerClick(index)} // Detectar doble click en el marcador para borrarlo
                   />
                 ))}
-                <DrawingManager
-                  onPolylineComplete={(polyline) => {
-                    console.log('Polyline complete', polyline);
-                  }}
-                  onPolygonComplete={(polygon) => {
-                    console.log('Polygon complete', polygon);
-                  }}
-                  options={{
-                    drawingControl: true,
-                    drawingControlOptions: {
-                      position: window.google.maps.ControlPosition.TOP_CENTER,
-                      drawingModes: ['marker', 'polygon', 'polyline', 'rectangle', 'circle'],
-                    },
-                  }}
-                />
+
               </GoogleMap>
             )}
           </LoadScript>
@@ -174,6 +167,30 @@ function Dashboard() {
           >
             <img src="/marcador.webp" alt="Marcador" className="w-8 h-8" />
             <p>Marcador</p>
+          </div>
+
+          <div
+            className="flex flex-col items-center mx-4"
+            onMouseDown={() => handleMouseDown('carroBlindado')}
+          >
+            <img src="/carroBlindado.png" alt="Carro Blindado" className="w-8 h-8" />
+            <p>Blindado</p>
+          </div>
+
+          <div
+            className="flex flex-col items-center mx-4"
+            onMouseDown={() => handleMouseDown('helicoptero')}
+          >
+            <img src="/helicoptero.png" alt="Helicóptero" className="w-8 h-8" />
+            <p>Helicóptero</p>
+          </div>
+
+          <div
+            className="flex flex-col items-center mx-4"
+            onMouseDown={() => handleMouseDown('perro')}
+          >
+            <img src="/perro.png" alt="Perro" className="w-8 h-8" />
+            <p>Perro</p>
           </div>
         </footer>
 
