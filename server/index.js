@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import { PORT, SECRET_JWT_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
 import cors from 'cors'
+import { MarkerRepository } from './marker-repository.js'
 
 const app = express()
 app.use(express.json())
@@ -77,6 +78,64 @@ app.get('/dashboard', (req, res) => {
     // Si la verificación falla, devuelve un 401 (Unauthorized)
     console.error('Token verification failed:', error.message) // Para depuración
     res.status(401).json({ message: 'Invalid token' })
+  }
+})
+
+app.post('/markers', async (req, res) => {
+  const { lat, lng, iconType } = req.body
+  const token = req.cookies.access_token
+
+  if (!token) return res.status(403).json({ message: 'No token provided.' })
+
+  try {
+    const verified = jwt.verify(token, SECRET_JWT_KEY)
+    const userId = verified.id // Obtenemos el userId del token
+
+    // Crear el marcador con el userId
+    const id = await MarkerRepository.createMarker({ lat, lng, iconType, userId })
+
+    res.status(201).json({ id })
+  } catch (error) {
+    res.status(500).json({ message: 'Error al guardar el marcador', error: error.message })
+  }
+})
+
+app.get('/markers', async (req, res) => {
+  const token = req.cookies.access_token
+
+  if (!token) return res.status(403).json({ message: 'No token provided.' })
+
+  try {
+    const verified = jwt.verify(token, SECRET_JWT_KEY)
+    const userId = verified.id
+
+    // Obtener los marcadores del usuario
+    const markers = await MarkerRepository.getUserMarkers(userId)
+
+    res.json(markers)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener los marcadores', error: error.message })
+  }
+})
+
+app.delete('/markers/:id', async (req, res) => {
+  const { id } = req.params
+  const token = req.cookies.access_token
+
+  if (!token) return res.status(403).json({ message: 'No token provided.' })
+
+  try {
+    const verified = jwt.verify(token, SECRET_JWT_KEY)
+    const userId = verified.id
+
+    // Eliminar el marcador si pertenece al usuario autenticado
+    const success = await MarkerRepository.deleteMarker(id, userId)
+
+    if (!success) return res.status(404).json({ message: 'Marcador no encontrado o no tienes permiso para eliminarlo.' })
+
+    res.status(200).json({ message: 'Marcador eliminado' })
+  } catch (error) {
+    res.status(500).json({ message: 'Error al eliminar el marcador', error: error.message })
   }
 })
 

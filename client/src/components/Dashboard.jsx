@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { GoogleMap, LoadScript, Marker, DrawingManager } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Sidebar from './SideBar';
 
 const libraries = ['drawing'];
@@ -20,8 +20,23 @@ function Dashboard() {
       try {
         const response = await axios.get('http://localhost:3000/dashboard', { withCredentials: true });
         setUser(response.data.user);
+
+        // Cargar marcadores del backend
+        const markersResponse = await axios.get('http://localhost:3000/markers', { withCredentials: true });
+        const formattedMarkers = markersResponse.data.map(marker => ({
+          id: marker.id,
+          position: {
+            lat: parseFloat(marker.lat), // Convertir a número
+            lng: parseFloat(marker.lng)  // Convertir a número
+          },
+          iconType: marker.iconType,
+        }));
+        
+        setMarkers(formattedMarkers);
+        console.log("Datos de marcadores:", formattedMarkers); // Verifica los datos de los marcadores
+        
       } catch (error) {
-        console.error(error);
+        console.error("Error al obtener datos del usuario o marcadores:", error);
         navigate('/');
       }
     };
@@ -52,7 +67,6 @@ function Dashboard() {
     setDraggedIcon(iconType);
     setDragging(true);
   };
-
   // Manejar el movimiento del ratón
   const handleMouseMove = (event) => {
     if (dragging) {
@@ -62,9 +76,8 @@ function Dashboard() {
       });
     }
   };
-
-  // Manejar el click en el mapa para soltar el ícono
-  const handleMapClick = (event) => {
+   // Manejar el click en el mapa para soltar el ícono
+  const handleMapClick = async (event) => {
     if (!draggedIcon) return;
 
     const latLng = {
@@ -72,20 +85,30 @@ function Dashboard() {
       lng: event.latLng.lng(),
     };
 
-    setMarkers([...markers, { position: latLng, iconType: draggedIcon }]);
+    try {
+      const response = await axios.post(
+        'http://localhost:3000/markers',
+        { lat: latLng.lat, lng: latLng.lng, iconType: draggedIcon },
+        { withCredentials: true }
+      );
+
+      setMarkers([...markers, { id: response.data.id, position: latLng, iconType: draggedIcon }]);
+    } catch (error) {
+      console.error('Error al guardar el marcador:', error);
+    }
+
     setDraggedIcon(null); // Limpiar ícono arrastrado
     setDragging(false);
     setMousePosition(null);
   };
 
-  // Obtener la URL de los íconos personalizados
   const getIconUrl = (iconType) => {
     switch (iconType) {
       case 'police':
         return '/Police.png'; 
-      case 'car':
+      case 'carro':
         return '/PoliceCar.png'; 
-      case 'marker':
+      case 'marcador':
         return '/marcador.webp'; 
       case 'carroBlindado':
         return '/carroBlindado.png'; 
@@ -97,27 +120,25 @@ function Dashboard() {
         return '/Police.png'; 
     }
   };
-
   // Manejar la eliminación de un marcador al hacer clic
-  const handleMarkerClick = (index) => {
-    // Filtrar los marcadores que no coinciden con el índice clickeado
-    const updatedMarkers = markers.filter((_, i) => i !== index);
-    setMarkers(updatedMarkers); // Actualizar los marcadores sin el marcador clickeado
+  const handleMarkerClick = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/markers/${id}`, { withCredentials: true });
+      setMarkers(markers.filter((marker) => marker.id !== id));
+    } catch (error) {
+      console.error('Error al eliminar el marcador:', error);
+    }
   };
 
   return (
     <div className="flex h-screen" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
-      {/* Sidebar Component */}
-      <Sidebar /> 
-
+      <Sidebar />
       <div className="flex flex-col items-center justify-center w-full">
-        {/* Map Section */}
         <div className="flex justify-center items-center w-full">
           <LoadScript
             googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
             libraries={libraries}
             onLoad={onLoad}
-            async
           >
             {mapLoaded && (
               <GoogleMap
@@ -126,72 +147,33 @@ function Dashboard() {
                 zoom={12}
                 onClick={handleMapClick}
               >
-                {markers.map((marker, index) => (
+                {markers.map((marker) => (
                   <Marker
-                    key={index}
+                    key={marker.id}
                     position={marker.position}
                     icon={{
                       url: getIconUrl(marker.iconType),
                       scaledSize: new window.google.maps.Size(32, 32),
                     }}
-                    onDblClick={() => handleMarkerClick(index)} // Detectar doble click en el marcador para borrarlo
+                    onDblClick={() => handleMarkerClick(marker.id)} // Detectar doble click en el marcador para borrarlo
                   />
                 ))}
-
               </GoogleMap>
             )}
           </LoadScript>
         </div>
-
-        {/* Footer with Icons */}
+        {/* Footer con los iconos */}   
         <footer className="flex justify-center items-center bg-blue-800 text-white p-4">
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('police')}
-          >
-            <img src="/Police.png" alt="Policía" className="w-8 h-8" />
-            <p>Policía</p>
-          </div>
-
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('car')}
-          >
-            <img src="/PoliceCar.png" alt="Auto" className="w-8 h-8" />
-            <p>Carro</p>
-          </div>
-
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('marker')}
-          >
-            <img src="/marcador.webp" alt="Marcador" className="w-8 h-8" />
-            <p>Marcador</p>
-          </div>
-
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('carroBlindado')}
-          >
-            <img src="/carroBlindado.png" alt="Carro Blindado" className="w-8 h-8" />
-            <p>Blindado</p>
-          </div>
-
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('helicoptero')}
-          >
-            <img src="/helicoptero.png" alt="Helicóptero" className="w-8 h-8" />
-            <p>Helicóptero</p>
-          </div>
-
-          <div
-            className="flex flex-col items-center mx-4"
-            onMouseDown={() => handleMouseDown('perro')}
-          >
-            <img src="/perro.png" alt="Perro" className="w-8 h-8" />
-            <p>Perro</p>
-          </div>
+          {['police', 'carro', 'marcador', 'carroBlindado', 'helicoptero', 'perro'].map((iconType) => (
+            <div
+              key={iconType}
+              className="flex flex-col items-center mx-4"
+              onMouseDown={() => handleMouseDown(iconType)}
+            >
+              <img src={getIconUrl(iconType)} alt={iconType} className="w-8 h-8" />
+              <p>{iconType.charAt(0).toUpperCase() + iconType.slice(1)}</p>
+            </div>
+          ))}
         </footer>
 
         {/* Mostrar el ícono arrastrado */}

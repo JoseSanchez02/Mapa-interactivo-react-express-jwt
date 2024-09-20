@@ -1,14 +1,7 @@
-import mysql from 'mysql2/promise'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import { SALT_ROUNDS } from './config.js'
-
-const connection = await mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '123494',
-  database: 'mapa_interactivo'
-})
+import { connection } from './db.js'
 
 export class UserRepository {
   static async create ({ username, password, rol }) {
