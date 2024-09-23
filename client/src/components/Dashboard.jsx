@@ -18,11 +18,11 @@ function Dashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/dashboard', { withCredentials: true });
+        const response = await axios.get('http://localhost:3001/dashboard', { withCredentials: true });
         setUser(response.data.user);
 
         // Cargar marcadores del backend
-        const markersResponse = await axios.get('http://localhost:3000/markers', { withCredentials: true });
+        const markersResponse = await axios.get('http://localhost:3001/markers', { withCredentials: true });
         const formattedMarkers = markersResponse.data.map(marker => ({
           id: marker.id,
           position: {
@@ -53,12 +53,14 @@ function Dashboard() {
 
   const containerStyle = {
     width: '75vw',
-    height: '75vh',
+    height: '80vh',
     margin: 'auto',
+    borderRadius: '20px 20px 0 0',  // Bordes superiores redondeados
+    overflow: 'hidden',   // Ocultar contenido que se desborde
   };
 
   const center = {
-    lat: 28.632995,
+    lat: 28.675995,
     lng: -106.069100,
   };
 
@@ -87,7 +89,7 @@ function Dashboard() {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/markers',
+        'http://localhost:3001/markers',
         { lat: latLng.lat, lng: latLng.lng, iconType: draggedIcon },
         { withCredentials: true }
       );
@@ -110,12 +112,12 @@ function Dashboard() {
         return '/PoliceCar.png'; 
       case 'marcador':
         return '/marcador.webp'; 
-      case 'carroBlindado':
-        return '/carroBlindado.png'; 
+      case 'Blindado':
+        return '/Blindado.png'; 
       case 'helicoptero':
         return '/helicoptero.png'; 
       case 'perro':
-        return '/perro.png'; 
+        return '/perro.webp'; 
       default:
         return '/Police.png'; 
     }
@@ -123,7 +125,7 @@ function Dashboard() {
   // Manejar la eliminación de un marcador al hacer clic
   const handleMarkerClick = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/markers/${id}`, { withCredentials: true });
+      await axios.delete(`http://localhost:3001/markers/${id}`, { withCredentials: true });
       setMarkers(markers.filter((marker) => marker.id !== id));
     } catch (error) {
       console.error('Error al eliminar el marcador:', error);
@@ -134,7 +136,7 @@ function Dashboard() {
     <div className="flex h-screen" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
       <div className="flex flex-col items-center justify-center w-full">
-        <div className="flex justify-center items-center w-full">
+        <div className="flex flex-col justify-center items-center" style={{ width: '75vw' }}>
           <LoadScript
             googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
             libraries={libraries}
@@ -162,9 +164,10 @@ function Dashboard() {
             )}
           </LoadScript>
         </div>
-        {/* Footer con los iconos */}   
-        <footer className="flex justify-center items-center bg-blue-800 text-white p-4">
-          {['police', 'carro', 'marcador', 'carroBlindado', 'helicoptero', 'perro'].map((iconType) => (
+
+        {/* Footer con los iconos */}
+        <footer className="flex justify-center items-center bg-sky-600 text-white p-3 rounded-b-2xl" style={{ width: '75vw' }}>
+          {['police', 'carro', 'Blindado', 'helicoptero', 'perro', 'marcador'].map((iconType) => (
             <div
               key={iconType}
               className="flex flex-col items-center mx-4"

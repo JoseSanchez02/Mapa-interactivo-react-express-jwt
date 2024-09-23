@@ -15,7 +15,7 @@ function Login() {
     const checkToken = async () => {
       try {
         // Hacemos una solicitud al backend para verificar el token
-        const response = await axios.get('http://localhost:3000/dashboard', { withCredentials: true });
+        const response = await axios.get('http://localhost:3001/dashboard', { withCredentials: true });
         // Si el token es válido, redirige al dashboard
         if (response.status === 200) {
           navigate('/dashboard');
@@ -31,7 +31,7 @@ function Login() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    axios.post('http://localhost:3000/login', values, { withCredentials: true })
+    axios.post('http://localhost:3001/login', values, { withCredentials: true })
       .then((response) => {
         console.log(response.data);
         // Redirigir al dashboard tras un login exitoso
