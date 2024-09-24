@@ -5,10 +5,10 @@ export class MarkerRepository {
   static async createMarker ({ lat, lng, iconType, userId }) {
     const id = crypto.randomUUID()
 
-    // Inserta el marcador con el userId
+    // Inserta el marcador con el userId y el id generado
     await connection.execute(
-      'INSERT INTO Markers (lat, lng, iconType, userId) VALUES (?, ?, ?, ?)',
-      [lat, lng, iconType, userId]
+      'INSERT INTO Markers (id, lat, lng, iconType, userId) VALUES (?, ?, ?, ?, ?)',
+      [id, lat, lng, iconType, userId]
     )
 
     return id
@@ -21,9 +21,9 @@ export class MarkerRepository {
   }
 
   static async deleteMarker (markerId, userId) {
+    console.log('Eliminando marcador con ID:', markerId, 'y userId:', userId)
     // Elimina un marcador solo si pertenece al usuario
     const [result] = await connection.execute('DELETE FROM Markers WHERE id = ? AND userId = ?', [markerId, userId])
-
     return result.affectedRows > 0 // Retorna true si el marcador fue eliminado
   }
 }

@@ -13,6 +13,8 @@ function Dashboard() {
   const [dragging, setDragging] = useState(false);
   const [draggedIcon, setDraggedIcon] = useState(null);
   const [mousePosition, setMousePosition] = useState(null);
+  const [center, setCenter] = useState({ lat: 28.675995, lng: -106.069100 });
+  const [isCentered, setIsCentered] = useState(false); // Estado para controlar si el mapa ya fue centrado
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,15 +28,13 @@ function Dashboard() {
         const formattedMarkers = markersResponse.data.map(marker => ({
           id: marker.id,
           position: {
-            lat: parseFloat(marker.lat), // Convertir a número
-            lng: parseFloat(marker.lng)  // Convertir a número
+            lat: parseFloat(marker.lat),
+            lng: parseFloat(marker.lng)
           },
           iconType: marker.iconType,
         }));
         
         setMarkers(formattedMarkers);
-        console.log("Datos de marcadores:", formattedMarkers); // Verifica los datos de los marcadores
-        
       } catch (error) {
         console.error("Error al obtener datos del usuario o marcadores:", error);
         navigate('/');
@@ -44,7 +44,7 @@ function Dashboard() {
   }, [navigate]);
 
   const onLoad = () => {
-    setMapLoaded(true);
+    setMapLoaded(true); // Mapa cargado
   };
 
   if (!user) {
@@ -55,13 +55,8 @@ function Dashboard() {
     width: '75vw',
     height: '80vh',
     margin: 'auto',
-    borderRadius: '20px 20px 0 0',  // Bordes superiores redondeados
-    overflow: 'hidden',   // Ocultar contenido que se desborde
-  };
-
-  const center = {
-    lat: 28.675995,
-    lng: -106.069100,
+    borderRadius: '20px 20px 0 0',
+    overflow: 'hidden',
   };
 
   // Manejar el inicio del arrastre del ícono
@@ -69,6 +64,7 @@ function Dashboard() {
     setDraggedIcon(iconType);
     setDragging(true);
   };
+
   // Manejar el movimiento del ratón
   const handleMouseMove = (event) => {
     if (dragging) {
@@ -78,8 +74,19 @@ function Dashboard() {
       });
     }
   };
-   // Manejar el click en el mapa para soltar el ícono
+
+  // Manejar el click en el mapa
   const handleMapClick = async (event) => {
+    if (!isCentered) {
+      const latLng = {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+      };
+      setCenter(latLng); // Cambia el centro del mapa
+      setIsCentered(true); // Marca como centrado
+      return; // Sale para evitar más acciones
+    }
+
     if (!draggedIcon) return;
 
     const latLng = {
@@ -104,44 +111,49 @@ function Dashboard() {
     setMousePosition(null);
   };
 
+  // Obtener la URL del ícono según su tipo
   const getIconUrl = (iconType) => {
     switch (iconType) {
       case 'police':
-        return '/Police.png'; 
+        return '/Police.png';
       case 'carro':
-        return '/PoliceCar.png'; 
+        return '/PoliceCar.png';
       case 'marcador':
-        return '/marcador.webp'; 
+        return '/marcador.webp';
       case 'Blindado':
-        return '/Blindado.png'; 
+        return '/Blindado.png';
       case 'helicoptero':
-        return '/helicoptero.png'; 
+        return '/helicoptero.png';
       case 'perro':
-        return '/perro.webp'; 
+        return '/perro.webp';
       default:
-        return '/Police.png'; 
+        return '/Police.png';
     }
   };
+
   // Manejar la eliminación de un marcador al hacer clic
   const handleMarkerClick = async (id) => {
+    console.log('Eliminando marcador con ID:', id); 
     try {
       await axios.delete(`http://localhost:3001/markers/${id}`, { withCredentials: true });
-      setMarkers(markers.filter((marker) => marker.id !== id));
+      setMarkers((prevMarkers) => prevMarkers.filter((marker) => marker.id !== id));
     } catch (error) {
       console.error('Error al eliminar el marcador:', error);
     }
   };
+  
 
   return (
-    <div className="flex h-screen" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
+    <div className="flex h-screen bg-blue-900" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
       <div className="flex flex-col items-center justify-center w-full">
         <div className="flex flex-col justify-center items-center" style={{ width: '75vw' }}>
           <LoadScript
             googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
             libraries={libraries}
-            onLoad={onLoad}
-          >
+            loading="async"
+            onLoad={onLoad}>
+
             {mapLoaded && (
               <GoogleMap
                 mapContainerStyle={containerStyle}
@@ -170,11 +182,11 @@ function Dashboard() {
           {['police', 'carro', 'Blindado', 'helicoptero', 'perro', 'marcador'].map((iconType) => (
             <div
               key={iconType}
-              className="flex flex-col items-center mx-4"
+              className="flex flex-col items-center mx-4 p-2 rounded-lg bg-white bg-opacity-10 hover:bg-opacity-20 cursor-pointer transition duration-200 ease-in-out transform hover:scale-105"
               onMouseDown={() => handleMouseDown(iconType)}
             >
               <img src={getIconUrl(iconType)} alt={iconType} className="w-8 h-8" />
-              <p>{iconType.charAt(0).toUpperCase() + iconType.slice(1)}</p>
+              <p className="mt-1">{iconType.charAt(0).toUpperCase() + iconType.slice(1)}</p>
             </div>
           ))}
         </footer>
