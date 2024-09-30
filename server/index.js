@@ -30,7 +30,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, rol: user.rol },
       SECRET_JWT_KEY, {
-        expiresIn: '1h'
+        expiresIn: '9h'
       }
     )
     res
@@ -38,7 +38,7 @@ app.post('/login', async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: 'strict', // proteccion csrf
-        maxAge: 3600000 // 1h
+        maxAge: 360000000 // 100h
       })
       .send({ user, token })
   } catch (error) {
