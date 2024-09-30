@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Sidebar from './SideBar';
+import RightSideBar from './RightSideBar';
+
 
 const libraries = ['drawing'];
 
@@ -144,8 +146,9 @@ function Dashboard() {
   
 
   return (
-    <div className="flex h-screen bg-blue-900" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
+    <div className="flex h-screen bg-sky-900 overflow-hidden " onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
+
       <div className="flex flex-col items-center justify-center w-full">
         <div className="flex flex-col justify-center items-center" style={{ width: '75vw' }}>
           <LoadScript
@@ -209,6 +212,7 @@ function Dashboard() {
           </div>
         )}
       </div>
+      <RightSideBar/>
     </div>
   );
 }
