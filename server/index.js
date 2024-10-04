@@ -5,6 +5,7 @@ import { PORT, SECRET_JWT_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
 import cors from 'cors'
 import { MarkerRepository } from './marker-repository.js'
+import { CrimeRepository } from './crime-repository.js'
 
 const app = express()
 app.use(express.json())
@@ -12,9 +13,9 @@ app.use(cookieParser())
 
 const corsOptions = {
   origin: 'http://localhost:5173', // url permitida
-  credentials: true, // Permite el envío de cookies y encabezados de autorización
+  credentials: true, // Permite el envío de cookies y headers de autorización
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'] // Encabezados permitidos
+  allowedHeaders: ['Content-Type', 'Authorization']
 }
 // middleware de CORS
 app.use(cors(corsOptions))
@@ -30,7 +31,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, rol: user.rol },
       SECRET_JWT_KEY, {
-        expiresIn: '9h'
+        expiresIn: '100h'
       }
     )
     res
@@ -136,6 +137,84 @@ app.delete('/markers/:id', async (req, res) => {
     res.status(200).json({ message: 'Marcador eliminado' })
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar el marcador', error: error.message })
+  }
+})
+
+app.get('/areas', async (req, res) => {
+  try {
+    const areas = await CrimeRepository.getAreas()
+    res.json(areas)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener áreas', error: error.message })
+  }
+})
+
+// Obtener todos los tipos de crimen
+app.get('/tipos-crimen', async (req, res) => {
+  try {
+    const crimeTypes = await CrimeRepository.getCrimeTypes()
+    res.json(crimeTypes)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener tipos de crimen', error: error.message })
+  }
+})
+
+// Crear un nuevo crimen
+app.post('/crimenes', async (req, res) => {
+  const { cantidad, id_area, id_tipo_crimen } = req.body
+  try {
+    const crimeId = await CrimeRepository.createCrime({ cantidad, id_area, id_tipo_crimen })
+    res.status(201).json({ id: crimeId })
+  } catch (error) {
+    res.status(500).json({ message: 'Error al crear crimen', error: error.message })
+  }
+})
+
+// Obtener todos los crímenes
+app.get('/crimenes', async (req, res) => {
+  try {
+    const crimes = await CrimeRepository.getAllCrimes()
+    res.json(crimes)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener crímenes', error: error.message })
+  }
+})
+
+// Eliminar un crimen
+app.delete('/crimenes/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const success = await CrimeRepository.deleteCrime(id)
+    if (!success) {
+      return res.status(404).json({ message: 'Crimen no encontrado' })
+    }
+    res.status(200).json({ message: 'Crimen eliminado' })
+  } catch (error) {
+    res.status(500).json({ message: 'Error al eliminar crimen', error: error.message })
+  }
+})
+
+// Endpoint para crear múltiples crímenes a partir de un objeto de estadísticas de crimen
+app.post('/crimenes/batch', async (req, res) => {
+  const { id_area, roboVehCv, roboVehSv, roboCasaCv, roboCasaSv } = req.body
+  // Array con los diferentes crímenes a insertar
+  const crimes = [
+    { cantidad: roboVehCv, id_area, id_tipo_crimen: 1 }, // Robo veh cv
+    { cantidad: roboVehSv, id_area, id_tipo_crimen: 2 }, // Robo veh sv
+    { cantidad: roboCasaCv, id_area, id_tipo_crimen: 3 }, // Robo casa cv
+    { cantidad: roboCasaSv, id_area, id_tipo_crimen: 4 } // Robo casa sv
+  ]
+
+  try {
+    // Crear cada crimen
+    for (const crime of crimes) {
+      if (crime.cantidad > -0.1) { // Evita insertar crímenes con cantidad 0
+        await CrimeRepository.createCrime(crime)
+      }
+    }
+    res.status(201).json({ message: 'Crímenes creados exitosamente' })
+  } catch (error) {
+    res.status(500).json({ message: 'Error al crear los crímenes', error: error.message })
   }
 })
 
