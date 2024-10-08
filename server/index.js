@@ -218,6 +218,27 @@ app.post('/crimenes/batch', async (req, res) => {
   }
 })
 
+// Obtener las últimas estadísticas de crimen para un área específica
+app.get('/crimenes/lastStats/:id_area', async (req, res) => {
+  const { id_area } = req.params
+  try {
+    const lastStats = await CrimeRepository.getLastStats(id_area)
+    res.json(lastStats)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener las últimas estadísticas', error: error.message })
+  }
+})
+
+app.get('/crimenes/stats/:id_area', async (req, res) => {
+  const { id_area } = req.params;
+  try {
+    const stats = await CrimeRepository.getLastTwelveStats(id_area)
+    res.json(stats)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener las estadísticas', error: error.message })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
 })
