@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, Polygon } from '@react-google-maps/api';
 import Sidebar from './SideBar';
 import RightSideBar from './RightSideBar';
-
+import { coordenadasPoligono1, coordenadasPoligono2, coordenadasPoligono3, coordenadasPoligono4, coordenadasPoligono5, coordenadasPoligono6} from '../data/poligonos.js';
 
 const libraries = ['drawing'];
 
@@ -46,7 +46,7 @@ function Dashboard() {
   }, [navigate]);
 
   const onLoad = () => {
-    setMapLoaded(true); // Mapa cargado
+    setMapLoaded(true); 
   };
 
   if (!user) {
@@ -60,13 +60,11 @@ function Dashboard() {
     borderRadius: '20px 20px 0 0',
     overflow: 'hidden',
   };
-
   // Manejar el inicio del arrastre del ícono
   const handleMouseDown = (iconType) => {
     setDraggedIcon(iconType);
     setDragging(true);
   };
-
   // Manejar el movimiento del ratón
   const handleMouseMove = (event) => {
     if (dragging) {
@@ -77,7 +75,6 @@ function Dashboard() {
     }
   };
 
-  // Manejar el click en el mapa
   const handleMapClick = async (event) => {
     if (!isCentered) {
       const latLng = {
@@ -85,8 +82,8 @@ function Dashboard() {
         lng: event.latLng.lng(),
       };
       setCenter(latLng); // Cambia el centro del mapa
-      setIsCentered(true); // Marca como centrado
-      return; // Sale para evitar más acciones
+      setIsCentered(true); // Marca como centrado el mapa
+      return;
     }
 
     if (!draggedIcon) return;
@@ -108,12 +105,11 @@ function Dashboard() {
       console.error('Error al guardar el marcador:', error);
     }
 
-    setDraggedIcon(null); // Limpiar ícono arrastrado
+    setDraggedIcon(null);
     setDragging(false);
     setMousePosition(null);
   };
 
-  // Obtener la URL del ícono según su tipo
   const getIconUrl = (iconType) => {
     switch (iconType) {
       case 'police':
@@ -133,7 +129,6 @@ function Dashboard() {
     }
   };
 
-  // Manejar la eliminación de un marcador al hacer clic
   const handleMarkerClick = async (id) => {
     console.log('Eliminando marcador con ID:', id); 
     try {
@@ -143,10 +138,19 @@ function Dashboard() {
       console.error('Error al eliminar el marcador:', error);
     }
   };
-  
 
+  // Convertir las coordenadas a un array de objetos
+
+
+  const polygonOptions = {
+    fillColor: 'rgba(255, 0, 0, 0.5)',
+    fillOpacity: 0.5,
+    strokeColor: 'red',
+    strokeOpacity: 1,
+    strokeWeight: 2,
+  };
   return (
-    <div className="flex h-screen bg-sky-900 overflow-hidden " onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
+    <div className="flex h-screen bg-sky-900 overflow-hidden" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
 
       <div className="flex flex-col items-center justify-center w-full">
@@ -172,15 +176,22 @@ function Dashboard() {
                       url: getIconUrl(marker.iconType),
                       scaledSize: new window.google.maps.Size(32, 32),
                     }}
-                    onDblClick={() => handleMarkerClick(marker.id)} // Detectar doble click en el marcador para borrarlo
+                    onDblClick={() => handleMarkerClick(marker.id)} // Eliminar marcador al hacer doble clic
                   />
                 ))}
+
+                {/* Renderizar los polígonos */}
+                <Polygon paths={coordenadasPoligono1} options={polygonOptions} />
+                <Polygon paths={coordenadasPoligono2} options={polygonOptions} />
+                <Polygon paths={coordenadasPoligono3} options={polygonOptions} />
+                <Polygon paths={coordenadasPoligono4} options={polygonOptions} />
+                <Polygon paths={coordenadasPoligono5} options={polygonOptions} />
+                <Polygon paths={coordenadasPoligono6} options={polygonOptions} />
               </GoogleMap>
             )}
           </LoadScript>
         </div>
-
-        {/* Footer con los iconos */}
+            {/* Footer con los iconos */}
         <footer className="flex justify-center items-center bg-sky-600 text-white p-3 rounded-b-2xl" style={{ width: '75vw' }}>
           {['police', 'carro', 'Blindado', 'helicoptero', 'perro', 'marcador'].map((iconType) => (
             <div
@@ -193,13 +204,12 @@ function Dashboard() {
             </div>
           ))}
         </footer>
-
         {/* Mostrar el ícono arrastrado */}
         {dragging && mousePosition && (
           <div
             style={{
               position: 'fixed',
-              top: mousePosition.y,
+              top: mousePosition.y, 
               left: mousePosition.x,
               pointerEvents: 'none',
             }}
@@ -212,7 +222,7 @@ function Dashboard() {
           </div>
         )}
       </div>
-      <RightSideBar/>
+      <RightSideBar />
     </div>
   );
 }

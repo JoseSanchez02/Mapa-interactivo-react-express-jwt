@@ -54,7 +54,7 @@ const SideBar = () => {
                     />
                   </svg>
                   <span className="invisible absolute start-full top-1/2 ms-4 -translate-y-1/2 rounded bg-gray-900 px-2 py-1.5 text-xs font-medium text-white group-hover:visible">
-                    General
+                    Estadisticas
                   </span>
                 </button>
               </div>
