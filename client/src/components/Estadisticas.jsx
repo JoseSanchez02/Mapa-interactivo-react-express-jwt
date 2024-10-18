@@ -13,12 +13,12 @@ const Estadisticas = () => {
   const [selectedArea, setSelectedArea] = useState(null);
 
   const areas = [
-    { id: 1, name: 'Área 1' },
-    { id: 2, name: 'Área 2' },
-    { id: 3, name: 'Área 3' },
-    { id: 4, name: 'Área 4' },
-    { id: 5, name: 'Área 5' },
-    { id: 6, name: 'Área 6' },
+    { id: 1, name: 'Ángel' },
+    { id: 2, name: 'Colón' },
+    { id: 3, name: 'Morelos' },
+    { id: 4, name: 'Villa' },
+    { id: 5, name: 'Diana' },
+    { id: 6, name: 'Zapata' },
   ];
 
   const openViewModal = (area) => {

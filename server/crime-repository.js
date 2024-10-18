@@ -23,19 +23,6 @@ export class CrimeRepository {
     return result.insertId
   }
 
-  // Obtener todos los crímenes
-  static async getAllCrimes () {
-    const query = `
-    SELECT crimenes.id, crimenes.cantidad, crimenes.fecha, areas.area, tipos_crimen.crimen
-    FROM crimenes
-    INNER JOIN areas ON crimenes.id_area = areas.id
-    INNER JOIN tipos_crimen ON crimenes.id_tipo_crimen = tipos_crimen.id
-    ORDER BY crimenes.fecha DESC
-  `
-    const [crimes] = await connection.execute(query)
-    return crimes
-  }
-
   // Eliminar un crimen por id
   static async deleteCrime (id) {
     const query = 'DELETE FROM crimenes WHERE id = ?'
@@ -108,5 +95,49 @@ export class CrimeRepository {
       console.error('Error en getLastTwelveStats:', error)
       throw error
     }
+  }
+
+  // Modificar el método getAllCrimes para incluir el id_area y id_tipo_crimen
+  static async getAllCrimes () {
+    const query = `
+      SELECT crimenes.id, crimenes.cantidad, crimenes.fecha, 
+             crimenes.id_area, crimenes.id_tipo_crimen,
+             areas.area, tipos_crimen.crimen
+      FROM crimenes
+      INNER JOIN areas ON crimenes.id_area = areas.id
+      INNER JOIN tipos_crimen ON crimenes.id_tipo_crimen = tipos_crimen.id
+      ORDER BY crimenes.fecha DESC
+    `
+    const [crimes] = await connection.execute(query)
+    return crimes
+  }
+
+  // Nuevo método para obtener las estadísticas de crimen más recientes por área
+  static async getLatestCrimeStatsByArea () {
+    const query = `
+      SELECT c1.id_area, c1.id_tipo_crimen, c1.cantidad, c1.fecha
+      FROM crimenes c1
+      INNER JOIN (
+        SELECT id_area, id_tipo_crimen, MAX(fecha) as max_fecha
+        FROM crimenes
+        GROUP BY id_area, id_tipo_crimen
+      ) c2 ON c1.id_area = c2.id_area 
+          AND c1.id_tipo_crimen = c2.id_tipo_crimen 
+          AND c1.fecha = c2.max_fecha
+      ORDER BY c1.id_area, c1.id_tipo_crimen
+    `
+    const [stats] = await connection.execute(query)
+    // Reorganizar los datos para que sean más fáciles de usar en el frontend
+    const organizedStats = stats.reduce((acc, stat) => {
+      if (!acc[stat.id_area]) {
+        acc[stat.id_area] = {}
+      }
+      acc[stat.id_area][stat.id_tipo_crimen] = {
+        cantidad: stat.cantidad,
+        fecha: stat.fecha
+      }
+      return acc
+    }, {})
+    return organizedStats
   }
 }

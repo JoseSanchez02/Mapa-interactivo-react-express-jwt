@@ -17,6 +17,8 @@ function Dashboard() {
   const [mousePosition, setMousePosition] = useState(null);
   const [center, setCenter] = useState({ lat: 28.675995, lng: -106.069100 });
   const [isCentered, setIsCentered] = useState(false); // Estado para controlar si el mapa ya fue centrado
+  const [selectedCrime, setSelectedCrime] = useState(1); // Default to 'Robo veh cv'
+  const [crimeStats, setCrimeStats] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,10 +45,28 @@ function Dashboard() {
       }
     };
     fetchUser();
+    fetchCrimeStats();
   }, [navigate]);
+
+  const fetchCrimeStats = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/crimenes/stats', { withCredentials: true });
+      setCrimeStats(response.data);
+    } catch (error) {
+      console.error("Error al obtener estadísticas de crímenes:", error);
+    }
+  };
 
   const onLoad = () => {
     setMapLoaded(true); 
+  };
+
+  const getColorForCrimeCount = (count) => {
+    if (count === undefined) return 'gray';
+    if (count >= 0 && count <= 20) return 'green';
+    if (count > 20 && count <= 40) return 'yellow';
+    if (count > 40 && count <= 60) return 'orange';
+    return 'red';
   };
 
   if (!user) {
@@ -139,16 +159,21 @@ function Dashboard() {
     }
   };
 
-  // Convertir las coordenadas a un array de objetos
-
-
-  const polygonOptions = {
-    fillColor: 'rgba(255, 0, 0, 0.5)',
-    fillOpacity: 0.5,
-    strokeColor: 'red',
-    strokeOpacity: 1,
-    strokeWeight: 2,
+  const getPolygonOptions = (areaId) => {
+    const areaStats = crimeStats[areaId];
+    const crimeCount = areaStats && areaStats[selectedCrime] ? areaStats[selectedCrime].cantidad : undefined;
+    return {
+      fillColor: getColorForCrimeCount(crimeCount),
+      fillOpacity: 0.5,
+      strokeColor: 'black',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      zIndex: 1,
+      clickable: false,
+    };
   };
+  
+  
   return (
     <div className="flex h-screen bg-sky-900 overflow-hidden" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
@@ -163,30 +188,37 @@ function Dashboard() {
 
             {mapLoaded && (
               <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={center}
-                zoom={12}
-                onClick={handleMapClick}
+              mapContainerStyle={containerStyle}
+              center={center}
+              zoom={12}
+              onClick={handleMapClick}
+              options={{
+                disableDefaultUI: true, // Desactiva toda la interfaz de usuario predeterminada
+                zoomControl: true, // Activa el control de zoom
+                fullscreenControl: true, // Activa el control de pantalla completa
+              }}
               >
+                          {/* Renderizar los polígonos */}
+                <Polygon paths={coordenadasPoligono1} options={getPolygonOptions('1')} />
+                <Polygon paths={coordenadasPoligono2} options={getPolygonOptions('2')} />
+                <Polygon paths={coordenadasPoligono3} options={getPolygonOptions('3')} />
+                <Polygon paths={coordenadasPoligono4} options={getPolygonOptions('4')} />
+                <Polygon paths={coordenadasPoligono5} options={getPolygonOptions('5')} />
+                <Polygon paths={coordenadasPoligono6} options={getPolygonOptions('6')} />
                 {markers.map((marker) => (
                   <Marker
-                    key={marker.id}
-                    position={marker.position}
-                    icon={{
-                      url: getIconUrl(marker.iconType),
-                      scaledSize: new window.google.maps.Size(32, 32),
-                    }}
-                    onDblClick={() => handleMarkerClick(marker.id)} // Eliminar marcador al hacer doble clic
-                  />
+                  key={marker.id}
+                  position={marker.position}
+                  icon={{
+                    url: getIconUrl(marker.iconType),
+                    scaledSize: new window.google.maps.Size(32, 32),
+                  }}
+                  zIndex={2} // Valor más alto que los polígonos
+                  onDblClick={() => handleMarkerClick(marker.id)} // Eliminar marcador al hacer doble clic
+                />                
                 ))}
 
-                {/* Renderizar los polígonos */}
-                <Polygon paths={coordenadasPoligono1} options={polygonOptions} />
-                <Polygon paths={coordenadasPoligono2} options={polygonOptions} />
-                <Polygon paths={coordenadasPoligono3} options={polygonOptions} />
-                <Polygon paths={coordenadasPoligono4} options={polygonOptions} />
-                <Polygon paths={coordenadasPoligono5} options={polygonOptions} />
-                <Polygon paths={coordenadasPoligono6} options={polygonOptions} />
+      
               </GoogleMap>
             )}
           </LoadScript>
@@ -222,7 +254,7 @@ function Dashboard() {
           </div>
         )}
       </div>
-      <RightSideBar />
+      <RightSideBar onCrimeTypeChange={setSelectedCrime} />
     </div>
   );
 }

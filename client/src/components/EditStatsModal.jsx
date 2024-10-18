@@ -76,7 +76,7 @@ const EditStatsModal = ({ area, closeModal }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-8 shadow-lg text-gray-800" style={{ width: '350px', textAlign: 'center' }}>
-        <h2 className="font-bold text-2xl mb-4">Área {crimeStats.id_area}</h2>
+        <h2 className="font-bold text-2xl mb-4">{area.name}</h2>
         {lastSavedDate && <p className="text-base mb-4">Último registro el: {lastSavedDate}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-2">

@@ -170,16 +170,6 @@ app.post('/crimenes', async (req, res) => {
   }
 })
 
-// Obtener todos los crímenes
-app.get('/crimenes', async (req, res) => {
-  try {
-    const crimes = await CrimeRepository.getAllCrimes()
-    res.json(crimes)
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener crímenes', error: error.message })
-  }
-})
-
 // Eliminar un crimen
 app.delete('/crimenes/:id', async (req, res) => {
   const { id } = req.params
@@ -238,7 +228,24 @@ app.get('/crimenes/stats/:id_area', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener las estadísticas', error: error.message })
   }
 })
+app.get('/crimenes', async (req, res) => {
+  try {
+    const crimes = await CrimeRepository.getAllCrimes()
+    res.json(crimes)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener crímenes', error: error.message })
+  }
+})
 
+// Nueva ruta para obtener las estadísticas de crimen más recientes por área
+app.get('/crimenes/stats', async (req, res) => {
+  try {
+    const stats = await CrimeRepository.getLatestCrimeStatsByArea()
+    res.json(stats)
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener estadísticas de crímenes', error: error.message })
+  }
+})
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
 })
