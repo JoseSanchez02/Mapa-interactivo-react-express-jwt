@@ -137,13 +137,13 @@ function Dashboard() {
       case 'carro':
         return '/PoliceCar.png';
       case 'marcador':
-        return '/marcador.webp';
+        return '/marcador.png';
       case 'Blindado':
         return '/Blindado.png';
       case 'helicoptero':
         return '/helicoptero.png';
       case 'perro':
-        return '/perro.webp';
+        return '/perro.png';
       default:
         return '/Police.png';
     }
@@ -211,11 +211,12 @@ function Dashboard() {
                   position={marker.position}
                   icon={{
                     url: getIconUrl(marker.iconType),
-                    scaledSize: new window.google.maps.Size(32, 32),
+                    scaledSize: new window.google.maps.Size(48, 48), // Aumenta el tamaño aquí
                   }}
                   zIndex={2} // Valor más alto que los polígonos
                   onDblClick={() => handleMarkerClick(marker.id)} // Eliminar marcador al hacer doble clic
-                />                
+                />
+                
                 ))}
 
       
