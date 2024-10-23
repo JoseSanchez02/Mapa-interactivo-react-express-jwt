@@ -22,12 +22,11 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndMarkers = async () => {
       try {
         const response = await axios.get('http://localhost:3001/dashboard', { withCredentials: true });
         setUser(response.data.user);
 
-        // Cargar marcadores del backend
         const markersResponse = await axios.get('http://localhost:3001/markers', { withCredentials: true });
         const formattedMarkers = markersResponse.data.map(marker => ({
           id: marker.id,
@@ -44,9 +43,12 @@ function Dashboard() {
         navigate('/');
       }
     };
-    fetchUser();
+    
+    fetchUserAndMarkers();
     fetchCrimeStats();
   }, [navigate]);
+  
+  
 
   const fetchCrimeStats = async () => {
     try {
@@ -75,7 +77,7 @@ function Dashboard() {
 
   const containerStyle = {
     width: '75vw',
-    height: '80vh',
+    height: '85vh',
     margin: 'auto',
     borderRadius: '20px 20px 0 0',
     overflow: 'hidden',

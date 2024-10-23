@@ -84,38 +84,21 @@ app.get('/dashboard', (req, res) => {
 
 app.post('/markers', async (req, res) => {
   const { lat, lng, iconType } = req.body
-  const token = req.cookies.access_token
-
-  if (!token) return res.status(403).json({ message: 'No token provided.' })
-
   try {
-    const verified = jwt.verify(token, SECRET_JWT_KEY)
-    const userId = verified.id // Obtenemos el userId del token
-
-    // Crear el marcador con el userId
-    const id = await MarkerRepository.createMarker({ lat, lng, iconType, userId })
-
-    res.status(201).json({ id })
+    const marker = await MarkerRepository.create({ lat, lng, iconType }) // Sin userId
+    res.send(marker)
   } catch (error) {
-    res.status(500).json({ message: 'Error al guardar el marcador', error: error.message })
+    res.status(500).send('Error al guardar el marcador')
   }
 })
 
 app.get('/markers', async (req, res) => {
-  const token = req.cookies.access_token
-
-  if (!token) return res.status(403).json({ message: 'No token provided.' })
-
   try {
-    const verified = jwt.verify(token, SECRET_JWT_KEY)
-    const userId = verified.id
-
-    // Obtener los marcadores del usuario
-    const markers = await MarkerRepository.getUserMarkers(userId)
-
-    res.json(markers)
+    // En lugar de obtener marcadores por usuario, devuelves todos los marcadores
+    const markers = await MarkerRepository.getAllMarkers()// Supongamos que este método obtiene todos los markers
+    res.send(markers)
   } catch (error) {
-    res.status(500).json({ message: 'Error al obtener los marcadores', error: error.message })
+    res.status(500).send({ message: 'Error al obtener los marcadores' })
   }
 })
 
@@ -220,7 +203,7 @@ app.get('/crimenes/lastStats/:id_area', async (req, res) => {
 })
 
 app.get('/crimenes/stats/:id_area', async (req, res) => {
-  const { id_area } = req.params;
+  const { id_area } = req.params
   try {
     const stats = await CrimeRepository.getLastTwelveStats(id_area)
     res.json(stats)
