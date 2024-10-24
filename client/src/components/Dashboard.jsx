@@ -16,8 +16,8 @@ function Dashboard() {
   const [draggedIcon, setDraggedIcon] = useState(null);
   const [mousePosition, setMousePosition] = useState(null);
   const [center, setCenter] = useState({ lat: 28.675995, lng: -106.069100 });
-  const [isCentered, setIsCentered] = useState(false); // Estado para controlar si el mapa ya fue centrado
-  const [selectedCrime, setSelectedCrime] = useState(1); // Default to 'Robo veh cv'
+  const [isCentered, setIsCentered] = useState(false);
+  const [selectedCrime, setSelectedCrime] = useState(1);
   const [crimeStats, setCrimeStats] = useState({});
   const navigate = useNavigate();
 
@@ -47,8 +47,6 @@ function Dashboard() {
     fetchUserAndMarkers();
     fetchCrimeStats();
   }, [navigate]);
-  
-  
 
   const fetchCrimeStats = async () => {
     try {
@@ -77,19 +75,22 @@ function Dashboard() {
 
   const containerStyle = {
     width: '75vw',
-    height: '85vh',
+    height: user.rol === 'estadistico' ? '80vh' : '90vh', // Ajusta la altura según el rol
     margin: 'auto',
-    borderRadius: '20px 20px 0 0',
+    borderRadius: user.rol === 'estadistico' ? '20px 20px 0 0' : '20px',
     overflow: 'hidden',
   };
-  // Manejar el inicio del arrastre del ícono
+
+  // Solo permitir estas funciones si el usuario es estadístico
   const handleMouseDown = (iconType) => {
-    setDraggedIcon(iconType);
-    setDragging(true);
+    if (user.rol === 'estadistico') {
+      setDraggedIcon(iconType);
+      setDragging(true);
+    }
   };
-  // Manejar el movimiento del ratón
+
   const handleMouseMove = (event) => {
-    if (dragging) {
+    if (dragging && user.rol === 'estadistico') {
       setMousePosition({
         x: event.clientX,
         y: event.clientY,
@@ -103,12 +104,12 @@ function Dashboard() {
         lat: event.latLng.lat(),
         lng: event.latLng.lng(),
       };
-      setCenter(latLng); // Cambia el centro del mapa
-      setIsCentered(true); // Marca como centrado el mapa
+      setCenter(latLng);
+      setIsCentered(true);
       return;
     }
 
-    if (!draggedIcon) return;
+    if (!draggedIcon || user.rol !== 'estadistico') return;
 
     const latLng = {
       lat: event.latLng.lat(),
@@ -132,6 +133,17 @@ function Dashboard() {
     setMousePosition(null);
   };
 
+  const handleMarkerClick = async (id) => {
+    if (user.rol !== 'estadistico') return;
+    
+    try {
+      await axios.delete(`http://localhost:3001/markers/${id}`, { withCredentials: true });
+      setMarkers((prevMarkers) => prevMarkers.filter((marker) => marker.id !== id));
+    } catch (error) {
+      console.error('Error al eliminar el marcador:', error);
+    }
+  };
+
   const getIconUrl = (iconType) => {
     switch (iconType) {
       case 'police':
@@ -151,16 +163,6 @@ function Dashboard() {
     }
   };
 
-  const handleMarkerClick = async (id) => {
-    console.log('Eliminando marcador con ID:', id); 
-    try {
-      await axios.delete(`http://localhost:3001/markers/${id}`, { withCredentials: true });
-      setMarkers((prevMarkers) => prevMarkers.filter((marker) => marker.id !== id));
-    } catch (error) {
-      console.error('Error al eliminar el marcador:', error);
-    }
-  };
-
   const getPolygonOptions = (areaId) => {
     const areaStats = crimeStats[areaId];
     const crimeCount = areaStats && areaStats[selectedCrime] ? areaStats[selectedCrime].cantidad : undefined;
@@ -174,8 +176,7 @@ function Dashboard() {
       clickable: false,
     };
   };
-  
-  
+
   return (
     <div className="flex h-screen bg-sky-900 overflow-hidden" onMouseMove={handleMouseMove} onMouseUp={() => setDragging(false)}>
       <Sidebar />
@@ -190,61 +191,62 @@ function Dashboard() {
 
             {mapLoaded && (
               <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={center}
-              zoom={12}
-              onClick={handleMapClick}
-              options={{
-                disableDefaultUI: true, // Desactiva toda la interfaz de usuario predeterminada
-                zoomControl: true, // Activa el control de zoom
-                fullscreenControl: true, // Activa el control de pantalla completa
-              }}
+                mapContainerStyle={containerStyle}
+                center={center}
+                zoom={12}
+                onClick={handleMapClick}
+                options={{
+                  disableDefaultUI: true,
+                  zoomControl: true,
+                  fullscreenControl: true,
+                }}
               >
-                          {/* Renderizar los polígonos */}
                 <Polygon paths={coordenadasPoligono1} options={getPolygonOptions('1')} />
                 <Polygon paths={coordenadasPoligono2} options={getPolygonOptions('2')} />
                 <Polygon paths={coordenadasPoligono3} options={getPolygonOptions('3')} />
                 <Polygon paths={coordenadasPoligono4} options={getPolygonOptions('4')} />
                 <Polygon paths={coordenadasPoligono5} options={getPolygonOptions('5')} />
                 <Polygon paths={coordenadasPoligono6} options={getPolygonOptions('6')} />
+                
                 {markers.map((marker) => (
                   <Marker
-                  key={marker.id}
-                  position={marker.position}
-                  icon={{
-                    url: getIconUrl(marker.iconType),
-                    scaledSize: new window.google.maps.Size(48, 48), // Aumenta el tamaño aquí
-                  }}
-                  zIndex={2} // Valor más alto que los polígonos
-                  onDblClick={() => handleMarkerClick(marker.id)} // Eliminar marcador al hacer doble clic
-                />
-                
+                    key={marker.id}
+                    position={marker.position}
+                    icon={{
+                      url: getIconUrl(marker.iconType),
+                      scaledSize: new window.google.maps.Size(48, 48),
+                    }}
+                    zIndex={2}
+                    onDblClick={() => handleMarkerClick(marker.id)}
+                  />
                 ))}
-
-      
               </GoogleMap>
             )}
           </LoadScript>
         </div>
-            {/* Footer con los iconos */}
-        <footer className="flex justify-center items-center bg-sky-600 text-white p-3 rounded-b-2xl" style={{ width: '75vw' }}>
-          {['police', 'carro', 'Blindado', 'helicoptero', 'perro', 'marcador'].map((iconType) => (
-            <div
-              key={iconType}
-              className="flex flex-col items-center mx-4 p-2 rounded-lg bg-white bg-opacity-10 hover:bg-opacity-20 cursor-pointer transition duration-200 ease-in-out transform hover:scale-105"
-              onMouseDown={() => handleMouseDown(iconType)}
-            >
-              <img src={getIconUrl(iconType)} alt={iconType} className="w-8 h-8" />
-              <p className="mt-1">{iconType.charAt(0).toUpperCase() + iconType.slice(1)}</p>
-            </div>
-          ))}
-        </footer>
-        {/* Mostrar el ícono arrastrado */}
-        {dragging && mousePosition && (
+
+        {/* Footer con los iconos - solo visible para estadísticos */}
+        {user.rol === 'estadistico' && (
+          <footer className="flex justify-center items-center bg-sky-600 text-white p-3 rounded-b-2xl" style={{ width: '75vw' }}>
+            {['police', 'carro', 'Blindado', 'helicoptero', 'perro', 'marcador'].map((iconType) => (
+              <div
+                key={iconType}
+                className="flex flex-col items-center mx-4 p-2 rounded-lg bg-white bg-opacity-10 hover:bg-opacity-20 cursor-pointer transition duration-200 ease-in-out transform hover:scale-105"
+                onMouseDown={() => handleMouseDown(iconType)}
+              >
+                <img src={getIconUrl(iconType)} alt={iconType} className="w-8 h-8" />
+                <p className="mt-1">{iconType.charAt(0).toUpperCase() + iconType.slice(1)}</p>
+              </div>
+            ))}
+          </footer>
+        )}
+
+        {/* Icono arrastrado - solo visible para estadísticos */}
+        {dragging && mousePosition && user.rol === 'estadistico' && (
           <div
             style={{
               position: 'fixed',
-              top: mousePosition.y, 
+              top: mousePosition.y,
               left: mousePosition.x,
               pointerEvents: 'none',
             }}

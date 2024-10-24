@@ -11,6 +11,7 @@ const Estadisticas = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
+  const [ setUser] = useState(null);
 
   const areas = [
     { id: 1, name: 'Ángel' },
@@ -36,13 +37,17 @@ const Estadisticas = () => {
       try {
         // Hacemos una solicitud al backend para verificar el token
         const response = await axios.get('http://localhost:3001/dashboard', { withCredentials: true });
+        setUser(response.data.user);
         // Si el token es válido, redirige al dashboard
-        if (response.status === 200) {
+        if (response.status === 200 && response.data.user.rol === 'estadistico') {
           console.log('valid token');
+        }
+        else{
+          navigate('/');
         }
       } catch (error) {
         // Si hay algún error, el token no es válido o no existe
-        navigate('/');
+        
         
       }
     };
