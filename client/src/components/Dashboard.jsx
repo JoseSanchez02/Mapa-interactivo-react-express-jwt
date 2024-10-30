@@ -15,8 +15,7 @@ function Dashboard() {
   const [dragging, setDragging] = useState(false);
   const [draggedIcon, setDraggedIcon] = useState(null);
   const [mousePosition, setMousePosition] = useState(null);
-  const [center, setCenter] = useState({ lat: 28.675995, lng: -106.069100 });
-  const [isCentered, setIsCentered] = useState(false);
+  const [center] = useState({ lat: 28.675995, lng: -106.069100 });
   const [selectedCrime, setSelectedCrime] = useState(1);
   const [crimeStats, setCrimeStats] = useState({});
   const navigate = useNavigate();
@@ -46,7 +45,7 @@ function Dashboard() {
     
     fetchUserAndMarkers();
     fetchCrimeStats();
-  }, [navigate]);
+  }, [navigate], [markers]);
 
   const fetchCrimeStats = async () => {
     try {
@@ -99,35 +98,26 @@ function Dashboard() {
   };
 
   const handleMapClick = async (event) => {
-    if (!isCentered) {
-      const latLng = {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng(),
-      };
-      setCenter(latLng);
-      setIsCentered(true);
-      return;
-    }
 
     if (!draggedIcon || user.rol !== 'estadistico') return;
-
+  
     const latLng = {
       lat: event.latLng.lat(),
       lng: event.latLng.lng(),
     };
-
+  
     try {
       const response = await axios.post(
         'http://localhost:3001/markers',
         { lat: latLng.lat, lng: latLng.lng, iconType: draggedIcon },
         { withCredentials: true }
       );
-
-      setMarkers([...markers, { id: response.data.id, position: latLng, iconType: draggedIcon }]);
+  
+      setMarkers([...markers, response.data]);
     } catch (error) {
       console.error('Error al guardar el marcador:', error);
     }
-
+  
     setDraggedIcon(null);
     setDragging(false);
     setMousePosition(null);
@@ -191,16 +181,16 @@ function Dashboard() {
 
             {mapLoaded && (
               <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={center}
-                zoom={12}
-                onClick={handleMapClick}
-                options={{
-                  disableDefaultUI: true,
-                  zoomControl: true,
-                  fullscreenControl: true,
-                }}
-              >
+                  mapContainerStyle={containerStyle}
+                  center={center}
+                  zoom={12}
+                  onClick={handleMapClick}
+                  options={{
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    fullscreenControl: true,
+                  }}
+                >
                 <Polygon paths={coordenadasPoligono1} options={getPolygonOptions('1')} />
                 <Polygon paths={coordenadasPoligono2} options={getPolygonOptions('2')} />
                 <Polygon paths={coordenadasPoligono3} options={getPolygonOptions('3')} />
@@ -208,18 +198,19 @@ function Dashboard() {
                 <Polygon paths={coordenadasPoligono5} options={getPolygonOptions('5')} />
                 <Polygon paths={coordenadasPoligono6} options={getPolygonOptions('6')} />
                 
-                {markers.map((marker) => (
-                  <Marker
-                    key={marker.id}
-                    position={marker.position}
-                    icon={{
-                      url: getIconUrl(marker.iconType),
-                      scaledSize: new window.google.maps.Size(48, 48),
-                    }}
-                    zIndex={2}
-                    onDblClick={() => handleMarkerClick(marker.id)}
-                  />
-                ))}
+                {markers.map((marker, index) => (
+  <Marker
+    key={`${marker.id}-${index}`}
+    position={marker.position}
+    icon={{
+      url: getIconUrl(marker.iconType),
+      scaledSize: new window.google.maps.Size(48, 48),
+    }}
+    zIndex={2}
+    onDblClick={() => handleMarkerClick(marker.id)}
+  />
+))}
+
               </GoogleMap>
             )}
           </LoadScript>
