@@ -5,13 +5,17 @@ export class MarkerRepository {
   static async createMarker ({ lat, lng, iconType }) {
     const id = crypto.randomUUID()
 
-    // Inserta el marcador con el userId y el id generado
     await connection.execute(
       'INSERT INTO Markers (id, lat, lng, iconType) VALUES (?, ?, ?, ?)',
       [id, lat, lng, iconType]
     )
-
-    return id
+    // Retornar el objeto completo del marcador
+    return {
+      id,
+      lat,
+      lng,
+      iconType
+    }
   }
 
   static async getUserMarkers (userId) {

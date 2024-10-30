@@ -85,8 +85,16 @@ app.get('/dashboard', (req, res) => {
 app.post('/markers', async (req, res) => {
   const { lat, lng, iconType } = req.body
   try {
-    const marker = await MarkerRepository.create({ lat, lng, iconType }) // Sin userId
-    res.send(marker)
+    const marker = await MarkerRepository.createMarker({ lat, lng, iconType })
+    // Devolver el objeto en el formato que espera el frontend
+    res.send({
+      id: marker.id,
+      position: {
+        lat: parseFloat(marker.lat),
+        lng: parseFloat(marker.lng)
+      },
+      iconType: marker.iconType
+    })
   } catch (error) {
     res.status(500).send('Error al guardar el marcador')
   }
