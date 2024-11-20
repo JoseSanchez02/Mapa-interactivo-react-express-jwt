@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ViewStatsModal from './ViewStatsModal';
 import EditStatsModal from './EditStatsModal';
 import Sidebar from './SideBar';
 import axios from 'axios';
 
-
-
 const Estadisticas = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [ setUser] = useState(null);
+ 
 
   const areas = [
     { id: 1, name: 'Ángel' },
@@ -31,36 +30,42 @@ const Estadisticas = () => {
     setSelectedArea(area);
     setEditModalOpen(true);
   };
+
   const navigate = useNavigate();
+
   useEffect(() => {
     const checkToken = async () => {
       try {
-        // Hacemos una solicitud al backend para verificar el token
+        console.log('Verificando token...');
         const response = await axios.get('http://localhost:3001/dashboard', { withCredentials: true });
-        setUser(response.data.user);
-        // Si el token es válido, redirige al dashboard
+        
+       // console.log('Respuesta del servidor:', response.data);
+        
         if (response.status === 200 && response.data.user.rol === 'estadistico') {
-          console.log('valid token');
-        }
-        else{
+          console.log('Token válido - Usuario estadístico autenticado');
+          
+        } else {
+          console.log('Token inválido o rol incorrecto - Redirigiendo al inicio');
           navigate('/');
         }
       } catch (error) {
-        // Si hay algún error, el token no es válido o no existe
-        
-        
+        console.error('Error al verificar el token:', error.message);
+        if (error.response) {
+          console.log('Estado de error:', error.response.status);
+          console.log('Datos del error:', error.response.data);
+        }
+        navigate('/');
       }
     };
   
     checkToken();
-  }, [navigate]);
+  }, [navigate]); 
 
   return (
     <div className="h-screen bg-blue-900 text-white">
       <div className="flex">
         {/* Sidebar a la izquierda */}
         <Sidebar />
-
         {/* Área principal de estadísticas */}
         <div className="flex-1 p-8">
           <h1 className="text-3xl font-bold mb-8">Estadísticas</h1>
@@ -85,16 +90,14 @@ const Estadisticas = () => {
               </div>
             ))}
           </div>
-
-          {/* Modal para ver estadísticas */}
+             {/* Modal para ver estadísticas */}
           {viewModalOpen && (
             <ViewStatsModal
               area={selectedArea}
               closeModal={() => setViewModalOpen(false)}
             />
           )}
-
-          {/* Modal para editar estadísticas */}
+{/* Modal para editar estadísticas */}
           {editModalOpen && (
             <EditStatsModal
               area={selectedArea}

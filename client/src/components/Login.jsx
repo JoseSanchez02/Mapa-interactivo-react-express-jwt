@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -22,7 +22,7 @@ function Login() {
         }
       } catch (error) {
         // Si hay algún error, el token no es válido o no existe
-        console.log('No valid token, staying on login.');
+        console.error('No valid token, staying on login.', error);
       }
     };
 

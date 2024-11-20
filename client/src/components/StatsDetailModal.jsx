@@ -1,4 +1,5 @@
-import React from 'react';
+
+import PropTypes from 'prop-types';
 
 const StatsDetailModal = ({ stat, closeModal }) => {
   return (
@@ -51,6 +52,17 @@ const StatsDetailModal = ({ stat, closeModal }) => {
       </div>
     </div>
   );
+};
+
+StatsDetailModal.propTypes = {
+  stat: PropTypes.shape({
+    fecha: PropTypes.string.isRequired,
+    roboVehCv: PropTypes.number.isRequired,
+    roboVehSv: PropTypes.number.isRequired,
+    roboCasaCv: PropTypes.number.isRequired,
+    roboCasaSv: PropTypes.number.isRequired,
+  }).isRequired,
+  closeModal: PropTypes.func.isRequired,
 };
 
 export default StatsDetailModal;

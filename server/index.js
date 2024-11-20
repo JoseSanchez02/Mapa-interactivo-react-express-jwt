@@ -102,7 +102,6 @@ app.post('/markers', async (req, res) => {
 
 app.get('/markers', async (req, res) => {
   try {
-    // En lugar de obtener marcadores por usuario, devuelves todos los marcadores
     const markers = await MarkerRepository.getAllMarkers()// Supongamos que este método obtiene todos los markers
     res.send(markers)
   } catch (error) {

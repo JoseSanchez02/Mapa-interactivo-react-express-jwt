@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 
 const RightSideBar = ({ onCrimeTypeChange }) => {
   const [selectedOption, setSelectedOption] = useState(null);
